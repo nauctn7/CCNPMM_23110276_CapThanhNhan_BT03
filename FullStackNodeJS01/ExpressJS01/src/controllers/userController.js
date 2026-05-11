@@ -1,16 +1,19 @@
 const { 
-    createUserService, 
-    loginService, 
+    createUserService,
+    loginService,
+    forgotPasswordService,
+    verifyOTPService,
+    resetPasswordService,
+    resendOTPService,
     getUserService,
     getAccountService 
 } = require('../services/userService');
 
-// Controller đăng ký user
+// Các controller cũ giữ nguyên...
 const createUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
         
-        // Validate input
         if (!name || !email || !password) {
             return res.status(400).json({
                 EC: 1,
@@ -41,7 +44,6 @@ const createUser = async (req, res) => {
     }
 };
 
-// Controller đăng nhập
 const handleLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -69,7 +71,125 @@ const handleLogin = async (req, res) => {
     }
 };
 
-// Controller lấy danh sách user
+// Forgot password - Gửi OTP
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Vui lòng nhập email"
+            });
+        }
+
+        const result = await forgotPasswordService(email);
+        
+        if (result.EC === 0) {
+            return res.status(200).json(result);
+        } else {
+            return res.status(400).json(result);
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EC: 2,
+            EM: "Lỗi server"
+        });
+    }
+};
+
+// Verify OTP
+const verifyOTP = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        
+        if (!email || !otp) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Vui lòng nhập đầy đủ thông tin"
+            });
+        }
+
+        const result = await verifyOTPService(email, otp);
+        
+        if (result.EC === 0) {
+            return res.status(200).json(result);
+        } else {
+            return res.status(400).json(result);
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EC: 2,
+            EM: "Lỗi server"
+        });
+    }
+};
+
+// Reset password với OTP đã xác thực
+const resetPassword = async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+        
+        if (!email || !newPassword) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Vui lòng nhập đầy đủ thông tin"
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Mật khẩu mới phải có ít nhất 6 ký tự"
+            });
+        }
+
+        const result = await resetPasswordService(email, newPassword);
+        
+        if (result.EC === 0) {
+            return res.status(200).json(result);
+        } else {
+            return res.status(400).json(result);
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EC: 2,
+            EM: "Lỗi server"
+        });
+    }
+};
+
+// Resend OTP
+const resendOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Vui lòng nhập email"
+            });
+        }
+
+        const result = await resendOTPService(email);
+        
+        if (result.EC === 0) {
+            return res.status(200).json(result);
+        } else {
+            return res.status(400).json(result);
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EC: 2,
+            EM: "Lỗi server"
+        });
+    }
+};
+
 const getUser = async (req, res) => {
     try {
         const result = await getUserService();
@@ -83,10 +203,8 @@ const getUser = async (req, res) => {
     }
 };
 
-// Controller lấy thông tin account
 const getAccount = async (req, res) => {
     try {
-        // userId được gán từ middleware auth
         const userId = req.user.userId;
         const result = await getAccountService(userId);
         return res.status(200).json(result);
@@ -102,6 +220,10 @@ const getAccount = async (req, res) => {
 module.exports = {
     createUser,
     handleLogin,
+    forgotPassword,
+    verifyOTP,
+    resetPassword,
+    resendOTP,
     getUser,
     getAccount
 };

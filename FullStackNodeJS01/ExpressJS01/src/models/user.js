@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Định nghĩa schema cho User
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -23,13 +22,31 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user'
     },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: {
+        type: String,
+        default: null
+    },
+    verificationTokenExpires: {
+        type: Date,
+        default: null
+    },
+    // Thêm các trường cho OTP
+    resetOTP: {
+        type: String,
+        default: null
+    },
+    resetOTPExpires: {
+        type: Date,
+        default: null
+    },
     createdAt: {
         type: Date,
         default: Date.now
     }
 });
 
-// Tạo model từ schema
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);

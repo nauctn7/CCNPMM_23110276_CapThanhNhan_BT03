@@ -6,6 +6,9 @@ import Header from './components/layout/Header';
 import PrivateRoute from './components/layout/PrivateRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyOTP from './pages/VerifyOTP';
+import ResetPasswordOTP from './pages/ResetPasswordOTP';  // Giữ nguyên
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 
@@ -32,8 +35,14 @@ function App() {
             <Header />
             <Content>
                 <Routes>
+                    {/* Public routes */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/verify-otp" element={<VerifyOTP />} />
+                    <Route path="/reset-password" element={<ResetPasswordOTP />} />
+                    
+                    {/* Private routes */}
                     <Route path="/" element={
                         <PrivateRoute>
                             <Home />
