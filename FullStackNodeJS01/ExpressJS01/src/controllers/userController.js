@@ -1,16 +1,18 @@
 const { 
-    createUserService,
+    registerService,
+    verifyRegistrationOTPService,
+    resendRegistrationOTPService,
     loginService,
     forgotPasswordService,
-    verifyOTPService,
+    verifyResetOTPService,
     resetPasswordService,
-    resendOTPService,
+    resendResetOTPService,
     getUserService,
     getAccountService 
 } = require('../services/userService');
 
-// Các controller cũ giữ nguyên...
-const createUser = async (req, res) => {
+// Đăng ký - Gửi OTP
+const register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
         
@@ -28,7 +30,7 @@ const createUser = async (req, res) => {
             });
         }
 
-        const result = await createUserService(name, email, password);
+        const result = await registerService(name, email, password);
         
         if (result.EC === 0) {
             return res.status(201).json(result);
@@ -44,7 +46,64 @@ const createUser = async (req, res) => {
     }
 };
 
-const handleLogin = async (req, res) => {
+// Xác thực OTP đăng ký
+const verifyRegistrationOTP = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        
+        if (!email || !otp) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Vui lòng nhập đầy đủ thông tin"
+            });
+        }
+
+        const result = await verifyRegistrationOTPService(email, otp);
+        
+        if (result.EC === 0) {
+            return res.status(200).json(result);
+        } else {
+            return res.status(400).json(result);
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EC: 2,
+            EM: "Lỗi server"
+        });
+    }
+};
+
+// Gửi lại OTP đăng ký
+const resendRegistrationOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Vui lòng nhập email"
+            });
+        }
+
+        const result = await resendRegistrationOTPService(email);
+        
+        if (result.EC === 0) {
+            return res.status(200).json(result);
+        } else {
+            return res.status(400).json(result);
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EC: 2,
+            EM: "Lỗi server"
+        });
+    }
+};
+
+// Đăng nhập
+const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         
@@ -71,7 +130,7 @@ const handleLogin = async (req, res) => {
     }
 };
 
-// Forgot password - Gửi OTP
+// Quên mật khẩu - Gửi OTP
 const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -99,8 +158,8 @@ const forgotPassword = async (req, res) => {
     }
 };
 
-// Verify OTP
-const verifyOTP = async (req, res) => {
+// Xác thực OTP quên mật khẩu
+const verifyResetOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
         
@@ -111,7 +170,7 @@ const verifyOTP = async (req, res) => {
             });
         }
 
-        const result = await verifyOTPService(email, otp);
+        const result = await verifyResetOTPService(email, otp);
         
         if (result.EC === 0) {
             return res.status(200).json(result);
@@ -127,7 +186,7 @@ const verifyOTP = async (req, res) => {
     }
 };
 
-// Reset password với OTP đã xác thực
+// Đặt lại mật khẩu
 const resetPassword = async (req, res) => {
     try {
         const { email, newPassword } = req.body;
@@ -162,8 +221,8 @@ const resetPassword = async (req, res) => {
     }
 };
 
-// Resend OTP
-const resendOTP = async (req, res) => {
+// Gửi lại OTP quên mật khẩu
+const resendResetOTP = async (req, res) => {
     try {
         const { email } = req.body;
         
@@ -174,7 +233,7 @@ const resendOTP = async (req, res) => {
             });
         }
 
-        const result = await resendOTPService(email);
+        const result = await resendResetOTPService(email);
         
         if (result.EC === 0) {
             return res.status(200).json(result);
@@ -218,12 +277,14 @@ const getAccount = async (req, res) => {
 };
 
 module.exports = {
-    createUser,
-    handleLogin,
+    register,
+    verifyRegistrationOTP,
+    resendRegistrationOTP,
+    login,
     forgotPassword,
-    verifyOTP,
+    verifyResetOTP,
     resetPassword,
-    resendOTP,
+    resendResetOTP,
     getUser,
     getAccount
 };

@@ -1,11 +1,11 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Spin } from 'antd';
 import { useAuth } from '../context/AuthContext';
 
-const PrivateRoute = ({ children }) => {
+/** Chỉ cho khách: đã đăng nhập thì về trang chủ */
+const GuestRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
-    const location = useLocation();
 
     if (loading) {
         return (
@@ -15,11 +15,11 @@ const PrivateRoute = ({ children }) => {
         );
     }
 
-    if (!isAuthenticated) {
-        return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    if (isAuthenticated) {
+        return <Navigate to="/" replace />;
     }
 
     return children;
 };
 
-export default PrivateRoute;
+export default GuestRoute;

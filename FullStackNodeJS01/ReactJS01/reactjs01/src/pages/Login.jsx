@@ -1,92 +1,98 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, message, Typography, Alert } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../components/context/AuthContext';
 
-const { Title } = Typography;
-
 const Login = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from || '/';
+    const notice = location.state?.message;
 
-    const onFinish = async (values) => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         setLoading(true);
-        const result = await login(values.email, values.password);
-        setLoading(false);
-
+        setError('');
+        
+        const result = await login(email, password);
+        
         if (result.success) {
-            message.success('Đăng nhập thành công!');
-            navigate('/');
+            navigate(from, { replace: true });
         } else {
-            message.error(result.error || 'Đăng nhập thất bại');
+            setError(result.error);
         }
+        setLoading(false);
     };
 
     return (
-        <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            minHeight: 'calc(100vh - 64px)',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-        }}>
-            <Card style={{ width: 450, borderRadius: 10, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-                <div style={{ textAlign: 'center', marginBottom: 30 }}>
-                    <Title level={2} style={{ color: '#1890ff' }}>Đăng nhập</Title>
-                    <Typography.Text type="secondary">
-                        Chào mừng bạn trở lại!
-                    </Typography.Text>
+        <div className="min-h-screen bg-gradient-to-r from-pink-100 to-pink-200 flex items-center justify-center py-12 px-4">
+            <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-pink-500">Đăng nhập</h2>
+                    <p className="text-gray-500 mt-2">Chào mừng bạn trở lại!</p>
                 </div>
-
-                <Form
-                    name="login"
-                    onFinish={onFinish}
-                    autoComplete="off"
-                    layout="vertical"
-                    size="large"
-                >
-                    <Form.Item
-                        label="Email"
-                        name="email"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập email!' },
-                            { type: 'email', message: 'Email không hợp lệ!' }
-                        ]}
-                    >
-                        <Input prefix={<UserOutlined />} placeholder="example@email.com" />
-                    </Form.Item>
-
-                    <Form.Item
-                        label="Mật khẩu"
-                        name="password"
-                        rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
-                    >
-                        <Input.Password prefix={<LockOutlined />} placeholder="********" />
-                    </Form.Item>
-                   
-                    <Form.Item>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Link to="/forgot-password" style={{ fontSize: 14 }}>
-                                Quên mật khẩu?
-                            </Link>
-                        </div>
-                    </Form.Item>
-
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit" loading={loading} block>
-                            Đăng nhập
-                        </Button>
-                    </Form.Item>
-
-                    <div style={{ textAlign: 'center' }}>
-                        <Typography.Text>
-                            Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
-                        </Typography.Text>
+                
+                {notice && (
+                    <div className="bg-amber-50 border border-amber-300 text-amber-800 px-4 py-3 rounded-lg mb-4 text-sm">
+                        {notice}
                     </div>
-                </Form>
-            </Card>
+                )}
+
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+                        {error}
+                    </div>
+                )}
+                
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Mật khẩu</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="text-right mb-4">
+                        <Link to="/forgot-password" className="text-pink-500 hover:underline text-sm">
+                            Quên mật khẩu?
+                        </Link>
+                    </div>
+                    
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition disabled:opacity-50"
+                    >
+                        {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+                    </button>
+                </form>
+                
+                <p className="text-center mt-6 text-gray-600">
+                    Chưa có tài khoản?{' '}
+                    <Link to="/register" className="text-pink-500 hover:underline">
+                        Đăng ký ngay
+                    </Link>
+                </p>
+            </div>
         </div>
     );
 };

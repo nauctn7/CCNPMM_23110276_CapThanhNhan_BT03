@@ -1,0 +1,44 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50;
+  }
+}
+
+.container-custom {
+  @apply max-w-7xl mx-auto px-4;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-amber-700 hover:to-amber-800 transition shadow-md hover:shadow-lg disabled:cursor-not-allowed;
+}
+
+.btn-outline {
+  @apply border-2 border-amber-600 text-amber-700 px-6 py-3 rounded-xl font-semibold hover:bg-amber-50 transition;
+}
+
+/* Swiper product gallery */
+.product-main-swiper .swiper-button-next,
+.product-main-swiper .swiper-button-prev {
+  @apply text-white bg-black/30 w-10 h-10 rounded-full;
+}
+
+.product-main-swiper .swiper-button-next::after,
+.product-main-swiper .swiper-button-prev::after {
+  font-size: 16px;
+}
+
+.product-main-swiper .swiper-pagination-bullet-active {
+  @apply bg-amber-600;
+}
+
+.thumbs-swiper .swiper-slide-thumb-active img {
+  @apply border-amber-600 opacity-100;
+}
+
+.section-title {
+  @apply text-2xl md:text-3xl font-bold text-gray-800;
+}

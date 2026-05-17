@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getToken, clearToken } from '../utils/authStorage';
 
 const api = axios.create({
     baseURL: 'http://localhost:8080',
@@ -7,27 +8,32 @@ const api = axios.create({
     },
 });
 
-// Interceptor để tự động thêm token vào header
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (token) {
             config.headers['x-auth-token'] = token;
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
-// Interceptor xử lý response
+const PUBLIC_PATHS = ['/', '/products', '/promotions', '/cart', '/login', '/register'];
+
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+        const status = error.response?.status;
+        if (status === 401 || status === 403) {
+            clearToken();
+            const path = window.location.pathname;
+            const isPublic = PUBLIC_PATHS.some(
+                (p) => path === p || path.startsWith('/product/')
+            );
+            if (!isPublic) {
+                window.location.href = '/';
+            }
         }
         return Promise.reject(error);
     }

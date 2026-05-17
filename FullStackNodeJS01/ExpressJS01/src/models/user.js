@@ -26,15 +26,16 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    verificationToken: {
+    // OTP xác thực đăng ký
+    verificationOTP: {
         type: String,
         default: null
     },
-    verificationTokenExpires: {
+    verificationOTPExpires: {
         type: Date,
         default: null
     },
-    // Thêm các trường cho OTP
+    // OTP quên mật khẩu
     resetOTP: {
         type: String,
         default: null

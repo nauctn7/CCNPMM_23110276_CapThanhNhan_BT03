@@ -7,6 +7,7 @@ import api from '../services/api';
 const { Title, Text } = Typography;
 
 const VerifyOTP = () => {
+    const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [resendLoading, setResendLoading] = useState(false);
     const [countdown, setCountdown] = useState(0);
@@ -17,6 +18,7 @@ const VerifyOTP = () => {
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const emailParam = queryParams.get('email');
+        const otpParam = queryParams.get('otp');
         
         if (!emailParam) {
             message.error('Email không hợp lệ!');
@@ -24,7 +26,10 @@ const VerifyOTP = () => {
             return;
         }
         setEmail(emailParam);
-    }, [location, navigate]);
+        if (otpParam) {
+            form.setFieldsValue({ otp: otpParam });
+        }
+    }, [location, navigate, form]);
 
     useEffect(() => {
         let timer;
@@ -101,6 +106,7 @@ const VerifyOTP = () => {
                 />
 
                 <Form
+                    form={form}
                     name="verify-otp"
                     onFinish={onFinish}
                     autoComplete="off"

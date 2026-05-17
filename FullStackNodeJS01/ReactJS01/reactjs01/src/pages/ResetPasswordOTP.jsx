@@ -1,166 +1,127 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Card, message, Typography } from 'antd';
-import { LockOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import api from '../services/api';
 
-const { Title, Text } = Typography;
-
-const ResetPasswordOTP = () => {
+const ResetPassword = () => {
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const [email, setEmail] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
-        const queryParams = new URLSearchParams(location.search);
-        const emailParam = queryParams.get('email');
-        
+        const params = new URLSearchParams(location.search);
+        const emailParam = params.get('email');
         if (!emailParam) {
-            message.error('Email không hợp lệ!');
             navigate('/forgot-password');
-            return;
+        } else {
+            setEmail(emailParam);
         }
-        setEmail(emailParam);
     }, [location, navigate]);
 
-    const onFinish = async (values) => {
-        if (values.newPassword !== values.confirmPassword) {
-            message.error('Mật khẩu xác nhận không khớp!');
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (newPassword.length < 6) {
+            setError('Mật khẩu phải có ít nhất 6 ký tự');
             return;
         }
-
-        if (values.newPassword.length < 6) {
-            message.error('Mật khẩu phải có ít nhất 6 ký tự!');
+        
+        if (newPassword !== confirmPassword) {
+            setError('Mật khẩu xác nhận không khớp');
             return;
         }
-
+        
         setLoading(true);
+        setError('');
+        
         try {
-            const response = await api.post('/api/reset-password', {
-                email: email,
-                newPassword: values.newPassword
-            });
-            
+            const response = await api.post('/api/reset-password', { email, newPassword });
             if (response.data.EC === 0) {
                 setSuccess(true);
-                message.success(response.data.EM);
                 setTimeout(() => {
                     navigate('/login');
                 }, 3000);
             } else {
-                message.error(response.data.EM);
+                setError(response.data.EM);
             }
         } catch (error) {
-            message.error(error.response?.data?.EM || 'Có lỗi xảy ra, vui lòng thử lại');
-        } finally {
-            setLoading(false);
+            setError(error.response?.data?.EM || 'Đặt lại mật khẩu thất bại');
         }
+        setLoading(false);
     };
 
     if (success) {
         return (
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 'calc(100vh - 64px)',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-            }}>
-                <Card style={{ width: 500, textAlign: 'center', borderRadius: 10 }}>
-                    <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a', marginBottom: 20 }} />
-                    <Title level={3}>Đặt lại mật khẩu thành công!</Title>
-                    <Text>Đang chuyển hướng đến trang đăng nhập...</Text>
-                </Card>
+            <div className="min-h-screen bg-gradient-to-r from-pink-100 to-pink-200 flex items-center justify-center py-12 px-4">
+                <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
+                    <div className="text-6xl mb-4">✅</div>
+                    <h2 className="text-2xl font-bold text-green-500 mb-4">Đặt lại mật khẩu thành công!</h2>
+                    <p className="text-gray-600">Đang chuyển hướng đến trang đăng nhập...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: 'calc(100vh - 64px)',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-        }}>
-            <Card style={{ width: 450, borderRadius: 10, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-                <div style={{ textAlign: 'center', marginBottom: 30 }}>
-                    <Title level={2} style={{ color: '#1890ff' }}>Đặt lại mật khẩu</Title>
-                    <Text type="secondary">
-                        Nhập mật khẩu mới cho tài khoản <strong>{email}</strong>
-                    </Text>
+        <div className="min-h-screen bg-gradient-to-r from-pink-100 to-pink-200 flex items-center justify-center py-12 px-4">
+            <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-pink-500">Đặt lại mật khẩu</h2>
+                    <p className="text-gray-500 mt-2">
+                        Tạo mật khẩu mới cho tài khoản <strong>{email}</strong>
+                    </p>
                 </div>
-
-                <Form
-                    name="reset-password"
-                    onFinish={onFinish}
-                    autoComplete="off"
-                    layout="vertical"
-                    size="large"
-                >
-                    <Form.Item
-                        label="Mật khẩu mới"
-                        name="newPassword"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập mật khẩu mới!' },
-                            { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }
-                        ]}
-                        hasFeedback
-                    >
-                        <Input.Password 
-                            prefix={<LockOutlined />} 
-                            placeholder="********" 
-                            size="large"
-                        />
-                    </Form.Item>
-
-                    <Form.Item
-                        label="Xác nhận mật khẩu mới"
-                        name="confirmPassword"
-                        dependencies={['newPassword']}
-                        rules={[
-                            { required: true, message: 'Vui lòng xác nhận mật khẩu!' },
-                            ({ getFieldValue }) => ({
-                                validator(_, value) {
-                                    if (!value || getFieldValue('newPassword') === value) {
-                                        return Promise.resolve();
-                                    }
-                                    return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
-                                },
-                            }),
-                        ]}
-                        hasFeedback
-                    >
-                        <Input.Password 
-                            prefix={<LockOutlined />} 
-                            placeholder="********" 
-                            size="large"
-                        />
-                    </Form.Item>
-
-                    <Form.Item>
-                        <Button 
-                            type="primary" 
-                            htmlType="submit" 
-                            loading={loading} 
-                            block
-                            size="large"
-                        >
-                            Đặt lại mật khẩu
-                        </Button>
-                    </Form.Item>
-
-                    <div style={{ textAlign: 'center' }}>
-                        <Link to="/login">
-                            Quay lại đăng nhập
-                        </Link>
+                
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+                        {error}
                     </div>
-                </Form>
-            </Card>
+                )}
+                
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Mật khẩu mới</label>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="mb-6">
+                        <label className="block text-gray-700 mb-2">Xác nhận mật khẩu mới</label>
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            required
+                        />
+                    </div>
+                    
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition disabled:opacity-50"
+                    >
+                        {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+                    </button>
+                </form>
+                
+                <p className="text-center mt-6">
+                    <Link to="/login" className="text-pink-500 hover:underline">
+                        ← Quay lại đăng nhập
+                    </Link>
+                </p>
+            </div>
         </div>
     );
 };
 
-export default ResetPasswordOTP;
+export default ResetPassword;

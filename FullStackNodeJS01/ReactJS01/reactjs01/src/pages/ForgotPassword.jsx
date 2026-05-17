@@ -1,132 +1,75 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, message, Typography } from 'antd';
-import { MailOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 
-const { Title, Text } = Typography;
-
 const ForgotPassword = () => {
-    const [loading, setLoading] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
-    const [email, setEmail] = useState('');
     const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const onFinish = async (values) => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         setLoading(true);
+        setError('');
+        
         try {
-            const response = await api.post('/api/forgot-password', { 
-                email: values.email 
-            });
-            
+            const response = await api.post('/api/forgot-password', { email });
             if (response.data.EC === 0) {
-                setEmail(values.email);
-                setSubmitted(true);
-                message.success(response.data.EM);
+                alert(response.data.otp
+                    ? `OTP dev: ${response.data.otp}`
+                    : 'Mã OTP đã được gửi đến email của bạn!');
+                navigate(`/verify-reset-otp?email=${encodeURIComponent(email)}${response.data.otp ? `&otp=${encodeURIComponent(response.data.otp)}` : ''}`);
             } else {
-                message.error(response.data.EM);
+                setError(response.data.EM);
             }
         } catch (error) {
-            message.error(error.response?.data?.EM || 'Có lỗi xảy ra, vui lòng thử lại');
-        } finally {
-            setLoading(false);
+            setError(error.response?.data?.EM || 'Gửi yêu cầu thất bại');
         }
+        setLoading(false);
     };
 
-    if (submitted) {
-        return (
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 'calc(100vh - 64px)',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-            }}>
-                <Card style={{ width: 500, textAlign: 'center', borderRadius: 10 }}>
-                    <MailOutlined style={{ fontSize: 64, color: '#1890ff', marginBottom: 20 }} />
-                    <Title level={3}>Mã OTP đã được gửi!</Title>
-                    <Text>
-                        Chúng tôi đã gửi mã OTP đến email <strong>{email}</strong>.<br />
-                        Vui lòng kiểm tra hộp thư (cả mục Spam) để lấy mã OTP.
-                    </Text>
-                    <div style={{ marginTop: 24 }}>
-                        <Button 
-                            type="primary" 
-                            onClick={() => navigate(`/verify-otp?email=${encodeURIComponent(email)}`)}
-                            size="large"
-                        >
-                            Nhập mã OTP
-                        </Button>
-                        <Button 
-                            style={{ marginTop: 10 }}
-                            onClick={() => navigate('/login')}
-                            type="link"
-                        >
-                            Quay lại đăng nhập
-                        </Button>
-                    </div>
-                </Card>
-            </div>
-        );
-    }
-
     return (
-        <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: 'calc(100vh - 64px)',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-        }}>
-            <Card style={{ width: 450, borderRadius: 10, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-                <div style={{ textAlign: 'center', marginBottom: 30 }}>
-                    <Title level={2} style={{ color: '#ff4d4f' }}>Quên mật khẩu?</Title>
-                    <Text type="secondary">
-                        Nhập email của bạn để nhận mã OTP đặt lại mật khẩu
-                    </Text>
+        <div className="min-h-screen bg-gradient-to-r from-pink-100 to-pink-200 flex items-center justify-center py-12 px-4">
+            <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-pink-500">Quên mật khẩu?</h2>
+                    <p className="text-gray-500 mt-2">Nhập email để nhận mã OTP</p>
                 </div>
-
-                <Form
-                    name="forgot-password"
-                    onFinish={onFinish}
-                    autoComplete="off"
-                    layout="vertical"
-                    size="large"
-                >
-                    <Form.Item
-                        label="Email"
-                        name="email"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập email!' },
-                            { type: 'email', message: 'Email không hợp lệ!' }
-                        ]}
-                    >
-                        <Input 
-                            prefix={<MailOutlined />} 
-                            placeholder="example@email.com" 
-                            size="large"
-                        />
-                    </Form.Item>
-
-                    <Form.Item>
-                        <Button 
-                            type="primary" 
-                            htmlType="submit" 
-                            loading={loading} 
-                            block
-                            size="large"
-                        >
-                            Gửi mã OTP
-                        </Button>
-                    </Form.Item>
-
-                    <div style={{ textAlign: 'center' }}>
-                        <Link to="/login">
-                            <ArrowLeftOutlined /> Quay lại đăng nhập
-                        </Link>
+                
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+                        {error}
                     </div>
-                </Form>
-            </Card>
+                )}
+                
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-6">
+                        <label className="block text-gray-700 mb-2">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            required
+                        />
+                    </div>
+                    
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition disabled:opacity-50"
+                    >
+                        {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
+                    </button>
+                </form>
+                
+                <p className="text-center mt-6">
+                    <Link to="/login" className="text-pink-500 hover:underline">
+                        ← Quay lại đăng nhập
+                    </Link>
+                </p>
+            </div>
         </div>
     );
 };

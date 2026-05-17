@@ -1,28 +1,46 @@
 const express = require('express');
 const { 
-    createUser,
-    handleLogin,
+    register,
+    verifyRegistrationOTP,
+    resendRegistrationOTP,
+    login,
     forgotPassword,
-    verifyOTP,
+    verifyResetOTP,
     resetPassword,
-    resendOTP,
+    resendResetOTP,
     getUser,
     getAccount 
 } = require('../controllers/userController');
+
+const {
+    getProducts,
+    getProductBySlug,
+    getFeaturedProducts,
+    getCategories
+} = require('../controllers/productController');
+
 const auth = require('../middleware/auth');
 const delay = require('../middleware/delay');
 
 const routerAPI = express.Router();
 
-// Routes công khai (KHÔNG cần auth)
-routerAPI.post("/register", createUser);
-routerAPI.post("/login", handleLogin);
-routerAPI.post("/forgot-password", forgotPassword);    // Gửi OTP
-routerAPI.post("/verify-otp", verifyOTP);              // Xác thực OTP
-routerAPI.post("/reset-password", resetPassword);      // Đặt lại mật khẩu
-routerAPI.post("/resend-otp", resendOTP);              // Gửi lại OTP
+// User routes (public)
+routerAPI.post("/register", register);
+routerAPI.post("/verify-registration-otp", verifyRegistrationOTP);
+routerAPI.post("/resend-registration-otp", resendRegistrationOTP);
+routerAPI.post("/login", login);
+routerAPI.post("/forgot-password", forgotPassword);
+routerAPI.post("/verify-reset-otp", verifyResetOTP);
+routerAPI.post("/reset-password", resetPassword);
+routerAPI.post("/resend-reset-otp", resendResetOTP);
 
-// Routes cần auth
+// Product routes (public)
+routerAPI.get("/products", getProducts);
+routerAPI.get("/products/featured", getFeaturedProducts);
+routerAPI.get("/products/categories", getCategories);
+routerAPI.get("/products/:slug", getProductBySlug);
+
+// User routes (private)
 routerAPI.get("/", auth, (req, res) => {
     return res.status(200).json({ 
         message: "Hello world api",

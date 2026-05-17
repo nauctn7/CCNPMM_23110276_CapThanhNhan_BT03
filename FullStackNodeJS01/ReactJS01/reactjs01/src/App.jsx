@@ -1,61 +1,73 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Layout, Spin } from 'antd';
-import { useAuth } from './components/context/AuthContext';
 import Header from './components/layout/Header';
+import AppBootstrap from './components/layout/AppBootstrap';
 import PrivateRoute from './components/layout/PrivateRoute';
+import GuestRoute from './components/layout/GuestRoute';
+import HomePage from './pages/HomePage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyRegistrationOTP from './pages/VerifyRegistrationOTP';
 import ForgotPassword from './pages/ForgotPassword';
-import VerifyOTP from './pages/VerifyOTP';
-import ResetPasswordOTP from './pages/ResetPasswordOTP';  // Giữ nguyên
-import Home from './pages/Home';
+import VerifyResetOTP from './pages/VerifyResetOTP';
+import ResetPassword from './pages/ResetPasswordOTP';
+import ProductDetail from './pages/ProductDetail';
+import ProductsPage from './pages/ProductsPage';
+import PromotionsPage from './pages/PromotionsPage';
+import CartPage from './pages/CartPage';
 import Profile from './pages/Profile';
 
-const { Content } = Layout;
-
 function App() {
-    const { loading } = useAuth();
-
-    if (loading) {
-        return (
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                height: '100vh' 
-            }}>
-                <Spin size="large" tip="Đang tải ứng dụng..." />
-            </div>
-        );
-    }
-
     return (
-        <Layout style={{ minHeight: '100vh' }}>
+        <>
             <Header />
-            <Content>
+            <AppBootstrap>
                 <Routes>
-                    {/* Public routes */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/products" element={<ProductsPage />} />
+                    <Route path="/promotions" element={<PromotionsPage />} />
+                    <Route path="/product/:slug" element={<ProductDetail />} />
+
+                    <Route
+                        path="/cart"
+                        element={
+                            <PrivateRoute>
+                                <CartPage />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/profile"
+                        element={
+                            <PrivateRoute>
+                                <Profile />
+                            </PrivateRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/login"
+                        element={
+                            <GuestRoute>
+                                <Login />
+                            </GuestRoute>
+                        }
+                    />
+                    <Route
+                        path="/register"
+                        element={
+                            <GuestRoute>
+                                <Register />
+                            </GuestRoute>
+                        }
+                    />
+                    <Route path="/verify-registration-otp" element={<VerifyRegistrationOTP />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/verify-otp" element={<VerifyOTP />} />
-                    <Route path="/reset-password" element={<ResetPasswordOTP />} />
-                    
-                    {/* Private routes */}
-                    <Route path="/" element={
-                        <PrivateRoute>
-                            <Home />
-                        </PrivateRoute>
-                    } />
-                    <Route path="/profile" element={
-                        <PrivateRoute>
-                            <Profile />
-                        </PrivateRoute>
-                    } />
+                    <Route path="/verify-reset-otp" element={<VerifyResetOTP />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                 </Routes>
-            </Content>
-        </Layout>
+            </AppBootstrap>
+        </>
     );
 }
 

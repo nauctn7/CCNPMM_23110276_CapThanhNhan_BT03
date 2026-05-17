@@ -1,5 +1,6 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import api from '../../services/api';
+import { getToken, setToken, clearToken } from '../../utils/authStorage';
 
 const AuthContext = createContext();
 
@@ -14,43 +15,51 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [token, setTokenState] = useState(getToken);
 
-    useEffect(() => {
-        if (token) {
-            fetchUser();
-        } else {
-            setLoading(false);
-        }
-    }, [token]);
+    const resetSession = useCallback(() => {
+        clearToken();
+        setTokenState(null);
+        setUser(null);
+    }, []);
 
-    const fetchUser = async () => {
+    const fetchUser = useCallback(async () => {
         try {
             const response = await api.get('/api/account');
             if (response.data.EC === 0) {
                 setUser(response.data.user);
+            } else {
+                resetSession();
             }
-        } catch (error) {
-            console.error('Fetch user error:', error);
-            localStorage.removeItem('token');
-            setToken(null);
+        } catch {
+            resetSession();
         } finally {
             setLoading(false);
         }
-    };
+    }, [resetSession]);
+
+    useEffect(() => {
+        const stored = getToken();
+        if (stored) {
+            setTokenState(stored);
+            fetchUser();
+        } else {
+            setLoading(false);
+        }
+    }, [fetchUser]);
 
     const login = async (email, password) => {
         try {
             const response = await api.post('/api/login', { email, password });
             if (response.data.EC === 0) {
-                localStorage.setItem('token', response.data.token);
                 setToken(response.data.token);
+                setTokenState(response.data.token);
                 setUser(response.data.user);
                 return { success: true, data: response.data };
             }
             return { success: false, error: response.data.EM };
         } catch (error) {
-            return { success: false, error: error.response?.data?.EM || 'Login failed' };
+            return { success: false, error: error.response?.data?.EM || 'Đăng nhập thất bại' };
         }
     };
 
@@ -62,15 +71,13 @@ export const AuthProvider = ({ children }) => {
             }
             return { success: false, error: response.data.EM };
         } catch (error) {
-            return { success: false, error: error.response?.data?.EM || 'Register failed' };
+            return { success: false, error: error.response?.data?.EM || 'Đăng ký thất bại' };
         }
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setToken(null);
-        setUser(null);
-    };
+    const logout = useCallback(() => {
+        resetSession();
+    }, [resetSession]);
 
     const value = {
         user,
@@ -78,12 +85,8 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
     };
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
