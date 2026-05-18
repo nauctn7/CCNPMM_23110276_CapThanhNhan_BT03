@@ -39,7 +39,7 @@ const CategoryProductsSection = () => {
     if (loading) {
         return (
             <section className="container-custom py-12">
-                <h2 className="section-title mb-6">Sản phẩm theo danh mục</h2>
+                <h2 className="section-title mb-6 lux-heading-dark">Sản phẩm theo danh mục</h2>
                 <div className="flex justify-center py-8">
                     <div className="animate-spin rounded-full h-10 w-10 border-4 border-pink-500 border-t-transparent" />
                 </div>
@@ -54,7 +54,7 @@ const CategoryProductsSection = () => {
     return (
         <section className="bg-gray-50 py-12">
             <div className="container-custom">
-                <h2 className="section-title mb-2">Sản phẩm theo danh mục</h2>
+                <h2 className="section-title mb-2 lux-heading-dark">Sản phẩm theo danh mục</h2>
                 <p className="text-gray-500 mb-8">Khám phá bộ sưu tập trang sức được phân loại rõ ràng</p>
 
                 {categoriesWithProducts.map((cat) => (

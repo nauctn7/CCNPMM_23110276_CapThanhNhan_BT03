@@ -8,18 +8,18 @@ const CartPage = () => {
 
     if (items.length === 0) {
         return (
-            <div className="container-custom py-16 text-center">
+            <div className="container-custom py-16 text-center" style={{ background: 'linear-gradient(180deg,#fffdf8 0%, #fbf6ef 100%)', borderRadius: 8 }}>
                 <p className="text-6xl mb-4">🛒</p>
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">Giỏ hàng trống</h1>
-                <p className="text-gray-500 mb-6">Hãy thêm sản phẩm yêu thích vào giỏ hàng</p>
-                <Link to="/products" className="btn-primary">Mua sắm ngay</Link>
+                <h1 className="text-2xl font-bold text-black mb-2">Giỏ hàng trống</h1>
+                <p className="text-black mb-6">Hãy thêm sản phẩm yêu thích vào giỏ hàng</p>
+                <Link to="/products" className="inline-block px-6 py-3 rounded-lg font-semibold" style={{ background: 'linear-gradient(135deg,#8f5d2f,#b8874a)', color: '#fff' }}>Mua sắm ngay</Link>
             </div>
         );
     }
 
     return (
-        <div className="container-custom py-8">
-            <h1 className="section-title mb-6">Giỏ hàng ({items.length} sản phẩm)</h1>
+        <div className="container-custom py-8" style={{ background: 'linear-gradient(180deg,#fffdf8 0%, #fbf6ef 100%)', borderRadius: 8 }}>
+            <h1 className="section-title mb-6" style={{ color: '#1b0e07' }}>Giỏ hàng ({items.length} sản phẩm)</h1>
             <div className="grid lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-4">
                     {items.map((item) => (
@@ -55,18 +55,18 @@ const CartPage = () => {
                         </div>
                     ))}
                 </div>
-                <div className="bg-white rounded-xl shadow-md p-6 h-fit">
-                    <h2 className="font-bold text-lg mb-4">Tóm tắt đơn hàng</h2>
+                    <div className="bg-white rounded-xl shadow-md p-6 h-fit">
+                    <h2 className="font-bold text-lg mb-4 text-black">Tóm tắt đơn hàng</h2>
                     <div className="flex justify-between mb-2">
-                        <span className="text-gray-600">Tạm tính</span>
+                        <span className="text-black">Tạm tính</span>
                         <span className="font-semibold">{formatPrice(totalPrice)}</span>
                     </div>
                     <hr className="my-4" />
                     <div className="flex justify-between mb-6">
-                        <span className="font-bold">Tổng cộng</span>
-                        <span className="text-xl font-bold text-pink-500">{formatPrice(totalPrice)}</span>
+                        <span className="font-bold text-black">Tổng cộng</span>
+                        <span className="text-xl font-bold text-amber-700">{formatPrice(totalPrice)}</span>
                     </div>
-                    <button type="button" className="btn-primary w-full mb-3">Thanh toán</button>
+                    <button type="button" className="w-full mb-3" style={{ background: 'linear-gradient(135deg,#8f5d2f,#b8874a)', color: '#fff', padding: '10px 12px', borderRadius: 8 }}>Thanh toán</button>
                     <button type="button" onClick={clearCart} className="w-full text-red-500 text-sm hover:underline">
                         Xóa giỏ hàng
                     </button>

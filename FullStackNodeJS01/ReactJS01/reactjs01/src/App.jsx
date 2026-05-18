@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
 import AppBootstrap from './components/layout/AppBootstrap';
 import PrivateRoute from './components/layout/PrivateRoute';
+import AdminRoute from './components/layout/AdminRoute';
 import GuestRoute from './components/layout/GuestRoute';
 import HomePage from './pages/HomePage';
 import Login from './pages/Login';
@@ -16,12 +17,16 @@ import ProductsPage from './pages/ProductsPage';
 import PromotionsPage from './pages/PromotionsPage';
 import CartPage from './pages/CartPage';
 import Profile from './pages/Profile';
+import AdminProductsPage from './pages/AdminProductsPage';
+import Footer from './components/layout/Footer';
+import ScrollToTop from './components/layout/ScrollToTop';
 
 function App() {
     return (
         <>
             <Header />
             <AppBootstrap>
+                <ScrollToTop />
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/products" element={<ProductsPage />} />
@@ -42,6 +47,14 @@ function App() {
                             <PrivateRoute>
                                 <Profile />
                             </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/products"
+                        element={
+                            <AdminRoute>
+                                <AdminProductsPage />
+                            </AdminRoute>
                         }
                     />
 
@@ -67,6 +80,7 @@ function App() {
                     <Route path="/reset-password" element={<ResetPassword />} />
                 </Routes>
             </AppBootstrap>
+            <Footer />
         </>
     );
 }

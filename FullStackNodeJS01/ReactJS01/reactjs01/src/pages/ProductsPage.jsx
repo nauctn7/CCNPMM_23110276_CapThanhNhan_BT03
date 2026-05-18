@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import ProductCard from '../components/products/ProductCard';
@@ -26,10 +26,14 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
     const [showMobileFilter, setShowMobileFilter] = useState(false);
+    const [lazyLoadMode, setLazyLoadMode] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const loadingMoreRef = useRef(false);
 
     const safeDefaultFilters = defaultFilters || EMPTY_FILTERS;
     const searchParamsKey = searchParams.toString();
@@ -48,31 +52,111 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
         setSearchInput(searchParams.get('search') || '');
     }, [searchParamsKey]);
 
+    // Fetch products for pagination mode
     useEffect(() => {
-        const fetchProducts = async () => {
-            setLoading(true);
-            try {
-                const params = new URLSearchParams();
-                Object.entries(filters).forEach(([key, val]) => {
-                    if (val) params.set(key, val);
-                });
-                params.set('page', page);
-                params.set('limit', '12');
+        if (!lazyLoadMode) {
+            const fetchProducts = async () => {
+                setLoading(true);
+                try {
+                    const params = new URLSearchParams();
+                    Object.entries(filters).forEach(([key, val]) => {
+                        if (val) params.set(key, val);
+                    });
+                    params.set('page', page);
+                    params.set('limit', '12');
 
-                const res = await api.get(`/api/products?${params.toString()}`);
-                if (res.data.EC === 0) {
-                    setProducts(res.data.products || []);
-                    setTotal(res.data.total || 0);
-                    setTotalPages(res.data.totalPages || 1);
+                    const res = await api.get(`/api/products?${params.toString()}`);
+                    if (res.data.EC === 0) {
+                        setProducts(res.data.products || []);
+                        setTotal(res.data.total || 0);
+                        setTotalPages(res.data.totalPages || 1);
+                    }
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    setLoading(false);
                 }
-            } catch (err) {
-                console.error(err);
-            } finally {
+            };
+            fetchProducts();
+        }
+    }, [filters, page, lazyLoadMode]);
+
+    // Fetch products for lazy loading mode
+    const fetchLazyLoadProducts = useCallback(async (pageNum = 1, append = false) => {
+        if (pageNum > 1 && loadingMoreRef.current) {
+            return;
+        }
+
+        try {
+            if (pageNum > 1) {
+                loadingMoreRef.current = true;
+            }
+
+            const params = new URLSearchParams();
+            Object.entries(filters).forEach(([key, val]) => {
+                if (val) params.set(key, val);
+            });
+            params.set('page', pageNum);
+            params.set('limit', '12');
+
+            if (pageNum > 1) setLoadingMore(true);
+            else setLoading(true);
+
+            const res = await api.get(`/api/products?${params.toString()}`);
+            if (res.data.EC === 0) {
+                if (append) {
+                    setProducts((prev) => [...prev, ...(res.data.products || [])]);
+                } else {
+                    setProducts(res.data.products || []);
+                }
+                setTotal(res.data.total || 0);
+                setTotalPages(res.data.totalPages || 1);
+                setCurrentPage(pageNum);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            if (pageNum > 1) {
+                loadingMoreRef.current = false;
+                setLoadingMore(false);
+            } else {
                 setLoading(false);
             }
+        }
+    }, [filters]);
+
+    // Initialize lazy loading mode
+    useEffect(() => {
+        if (lazyLoadMode) {
+            setCurrentPage(1);
+            fetchLazyLoadProducts(1, false);
+        }
+    }, [lazyLoadMode, filters, fetchLazyLoadProducts]);
+
+    // Infinite scroll trigger using the window scroll position.
+    useEffect(() => {
+        if (!lazyLoadMode || loading || loadingMore || currentPage >= totalPages) {
+            return undefined;
+        }
+
+        const triggerLoadMore = () => {
+            const scrolledNearBottom =
+                window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 400;
+
+            if (scrolledNearBottom && !loadingMoreRef.current) {
+                fetchLazyLoadProducts(currentPage + 1, true);
+            }
         };
-        fetchProducts();
-    }, [filters, page]);
+
+        window.addEventListener('scroll', triggerLoadMore, { passive: true });
+        window.addEventListener('resize', triggerLoadMore);
+        triggerLoadMore();
+
+        return () => {
+            window.removeEventListener('scroll', triggerLoadMore);
+            window.removeEventListener('resize', triggerLoadMore);
+        };
+    }, [lazyLoadMode, loading, loadingMore, currentPage, totalPages, fetchLazyLoadProducts]);
 
     const applyFilters = (newFilters, newPage = 1) => {
         const params = new URLSearchParams();
@@ -132,11 +216,11 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
     ).length;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="bg-gradient-to-r from-pink-500 to-pink-600 text-white py-10">
+        <div className="min-h-screen" style={{ background: 'linear-gradient(180deg,#fffdf8 0%, #fbf6ef 100%)' }}>
+            <div className="py-10">
                 <div className="container-custom">
-                    <h1 className="text-3xl md:text-4xl font-bold mb-2">{pageTitle}</h1>
-                    <p className="text-pink-100">
+                    <h1 className="text-3xl md:text-4xl font-bold mb-2 lux-heading-dark">{pageTitle}</h1>
+                    <p className="lux-subtitle-dark">
                         {total > 0 ? `Tìm thấy ${total} sản phẩm` : 'Khám phá bộ sưu tập trang sức cao cấp'}
                     </p>
                 </div>
@@ -150,8 +234,8 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
                         onClick={() => handleCategoryTab('')}
                         className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition ${
                             !filters.category
-                                ? 'bg-pink-500 text-white shadow'
-                                : 'bg-white text-gray-600 border hover:border-pink-300'
+                                ? 'lux-accent'
+                                : 'bg-white text-gray-700 border hover:border-amber-400'
                         }`}
                     >
                         Tất cả
@@ -163,8 +247,8 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
                             onClick={() => handleCategoryTab(cat.value)}
                             className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition ${
                                 filters.category === cat.value
-                                    ? 'bg-pink-500 text-white shadow'
-                                    : 'bg-white text-gray-600 border hover:border-pink-300'
+                                    ? 'lux-accent'
+                                    : 'bg-white text-gray-700 border hover:border-amber-400'
                             }`}
                         >
                             {cat.label}
@@ -179,9 +263,9 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         placeholder="Tìm theo tên, mô tả, chất liệu, đá quý..."
-                        className="flex-1 border rounded-xl px-4 py-3 focus:ring-2 focus:ring-pink-500 outline-none shadow-sm"
+                        className="flex-1 border rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-400 outline-none shadow-sm bg-white text-gray-900"
                     />
-                    <button type="submit" className="btn-primary px-8">Tìm kiếm</button>
+                    <button type="submit" className="btn-primary px-8 lux-accent">Tìm kiếm</button>
                     <button
                         type="button"
                         onClick={() => setShowMobileFilter(!showMobileFilter)}
@@ -199,7 +283,8 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
                                 key={chip.key}
                                 type="button"
                                 onClick={() => removeFilter(chip.key)}
-                                className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm flex items-center gap-1 hover:bg-pink-200 transition"
+                                className="px-3 py-1 rounded-full text-sm flex items-center gap-1 transition border shadow-sm"
+                                style={{ background: 'rgba(184,135,74,0.10)', borderColor: 'rgba(184,135,74,0.25)', color: '#7a431e' }}
                             >
                                 {chip.label}
                                 <span className="font-bold">×</span>
@@ -208,7 +293,8 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
                         <button
                             type="button"
                             onClick={handleReset}
-                            className="text-sm text-gray-500 hover:text-pink-500 underline"
+                            className="text-sm font-medium underline"
+                            style={{ color: '#8b6b4a' }}
                         >
                             Xóa tất cả
                         </button>
@@ -225,6 +311,33 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
                     </div>
 
                     <div className="md:col-span-3">
+                        {/* Display Mode Toggle */}
+                        <div className="mb-4 flex gap-2 items-center">
+                            <span className="text-sm text-gray-600">Chế độ hiển thị:</span>
+                            <button
+                                type="button"
+                                onClick={() => setLazyLoadMode(false)}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border shadow-sm ${
+                                    !lazyLoadMode
+                                        ? 'lux-accent border-transparent'
+                                        : 'bg-white text-gray-700 border-[#d8c6b1] hover:border-[#b8874a] hover:bg-[#fffaf3]'
+                                }`}
+                            >
+                                📄 Phân trang
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setLazyLoadMode(true)}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border shadow-sm ${
+                                    lazyLoadMode
+                                        ? 'lux-accent border-transparent'
+                                        : 'bg-white text-gray-700 border-[#d8c6b1] hover:border-[#b8874a] hover:bg-[#fffaf3]'
+                                }`}
+                            >
+                                ∞ Tải tiếp
+                            </button>
+                        </div>
+
                         {!loading && (
                             <p className="text-sm text-gray-500 mb-4">
                                 Hiển thị {products.length} / {total} sản phẩm
@@ -234,14 +347,14 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
                             </p>
                         )}
 
-                        {loading ? (
-                            <div className="flex justify-center items-center h-64">
-                                <div className="animate-spin rounded-full h-12 w-12 border-4 border-pink-500 border-t-transparent" />
+                        {loading && (!lazyLoadMode || products.length === 0) ? (
+                            <div className="flex justify-center items-center h-64 rounded-2xl border border-[#e5d7c7] bg-white/80 shadow-sm">
+                                <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#b8874a] border-t-transparent" />
                             </div>
                         ) : products.length === 0 ? (
-                            <div className="bg-white rounded-xl shadow-md p-12 text-center">
-                                <p className="text-gray-500 text-lg mb-4">Không tìm thấy sản phẩm phù hợp</p>
-                                <button onClick={handleReset} className="btn-primary">Xóa bộ lọc</button>
+                            <div className="bg-white rounded-xl shadow-md p-12 text-center border border-[#e5d7c7]">
+                                <p className="text-lg mb-4" style={{ color: '#6b5546' }}>Không tìm thấy sản phẩm phù hợp</p>
+                                <button type="button" onClick={handleReset} className="btn-primary">Xóa bộ lọc</button>
                             </div>
                         ) : (
                             <>
@@ -256,12 +369,37 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
                                     ))}
                                 </div>
 
-                                {totalPages > 1 && (
+                                {lazyLoadMode && currentPage < totalPages && (
+                                    <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-[#e5d7c7] bg-white/70 p-5 text-center shadow-sm">
+                                        <p className="text-sm" style={{ color: '#6b5546' }}>
+                                            Cuộn xuống để tự tải tiếp hoặc nhấn nút bên dưới.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => fetchLazyLoadProducts(currentPage + 1, true)}
+                                            disabled={loadingMore}
+                                            className="btn-primary rounded-full px-6 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                                        >
+                                            {loadingMore ? 'Đang tải...' : 'Tải thêm sản phẩm'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {lazyLoadMode && currentPage >= totalPages && products.length > 0 && (
+                                    <div className="py-8 text-center">
+                                        <p className="text-gray-500">Đã tải hết tất cả sản phẩm</p>
+                                    </div>
+                                )}
+
+                                {/* Pagination Controls */}
+                                {!lazyLoadMode && totalPages > 1 && (
                                     <div className="flex justify-center items-center gap-2 mt-8">
                                         <button
+                                            type="button"
                                             onClick={() => goToPage(page - 1)}
                                             disabled={page <= 1}
-                                            className="px-4 py-2 border rounded-lg disabled:opacity-40 hover:bg-pink-50"
+                                            className="px-4 py-2 border rounded-full disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm bg-white hover:bg-[#fff7ed]"
+                                            style={{ borderColor: 'rgba(184,135,74,0.30)', color: '#5c4636' }}
                                         >
                                             ← Trước
                                         </button>
@@ -270,24 +408,28 @@ const ProductsPage = ({ pageTitle = 'Sản phẩm', defaultFilters }) => {
                                             .map((p, idx, arr) => (
                                                 <React.Fragment key={p}>
                                                     {idx > 0 && arr[idx - 1] !== p - 1 && (
-                                                        <span className="px-2 text-gray-400">...</span>
+                                                        <span className="px-2" style={{ color: '#b09a87' }}>...</span>
                                                     )}
                                                     <button
+                                                        type="button"
                                                         onClick={() => goToPage(p)}
-                                                        className={`w-10 h-10 rounded-lg font-medium ${
+                                                        className={`w-10 h-10 rounded-full font-semibold transition shadow-sm ${
                                                             p === page
-                                                                ? 'bg-pink-500 text-white'
-                                                                : 'border hover:bg-pink-50'
+                                                                ? 'lux-accent border-transparent'
+                                                                : 'border bg-white hover:bg-[#fff7ed]'
                                                         }`}
+                                                        style={p !== page ? { borderColor: 'rgba(184,135,74,0.30)', color: '#5c4636' } : undefined}
                                                     >
                                                         {p}
                                                     </button>
                                                 </React.Fragment>
                                             ))}
                                         <button
+                                            type="button"
                                             onClick={() => goToPage(page + 1)}
                                             disabled={page >= totalPages}
-                                            className="px-4 py-2 border rounded-lg disabled:opacity-40 hover:bg-pink-50"
+                                            className="px-4 py-2 border rounded-full disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm bg-white hover:bg-[#fff7ed]"
+                                            style={{ borderColor: 'rgba(184,135,74,0.30)', color: '#5c4636' }}
                                         >
                                             Sau →
                                         </button>

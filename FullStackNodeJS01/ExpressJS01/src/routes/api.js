@@ -16,10 +16,18 @@ const {
     getProducts,
     getProductBySlug,
     getFeaturedProducts,
-    getCategories
+    getCategories,
+    getTopBestSellerProducts,
+    getTopMostViewedProducts,
+    getProductsByCategory,
+    getAdminProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct
 } = require('../controllers/productController');
 
 const auth = require('../middleware/auth');
+const adminOnly = require('../middleware/admin');
 const delay = require('../middleware/delay');
 
 const routerAPI = express.Router();
@@ -37,8 +45,17 @@ routerAPI.post("/resend-reset-otp", resendResetOTP);
 // Product routes (public)
 routerAPI.get("/products", getProducts);
 routerAPI.get("/products/featured", getFeaturedProducts);
+routerAPI.get("/products/top/bestsellers", getTopBestSellerProducts);
+routerAPI.get("/products/top/mostviewed", getTopMostViewedProducts);
+routerAPI.get("/products/category", getProductsByCategory);
 routerAPI.get("/products/categories", getCategories);
 routerAPI.get("/products/:slug", getProductBySlug);
+
+// Product routes (admin)
+routerAPI.get('/admin/products', auth, adminOnly, getAdminProducts);
+routerAPI.post('/admin/products', auth, adminOnly, createProduct);
+routerAPI.put('/admin/products/:id', auth, adminOnly, updateProduct);
+routerAPI.delete('/admin/products/:id', auth, adminOnly, deleteProduct);
 
 // User routes (private)
 routerAPI.get("/", auth, (req, res) => {

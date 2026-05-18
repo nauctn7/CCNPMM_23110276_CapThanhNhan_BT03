@@ -30,11 +30,11 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-r from-pink-100 to-pink-200 flex items-center justify-center py-12 px-4">
+        <div className="min-h-screen flex items-center justify-center py-12 px-4" style={{ background: 'linear-gradient(90deg,#fdf8f1,#f8eee2)' }}>
             <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-pink-500">Quên mật khẩu?</h2>
-                    <p className="text-gray-500 mt-2">Nhập email để nhận mã OTP</p>
+                    <h2 className="text-3xl font-bold text-black">Quên mật khẩu?</h2>
+                    <p className="text-black mt-2">Nhập email để nhận mã OTP</p>
                 </div>
                 
                 {error && (
@@ -45,12 +45,12 @@ const ForgotPassword = () => {
                 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-6">
-                        <label className="block text-gray-700 mb-2">Email</label>
+                        <label className="block text-black mb-2">Email</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-[#b8874a]"
                             required
                         />
                     </div>
@@ -58,7 +58,8 @@ const ForgotPassword = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition disabled:opacity-50"
+                        className="w-full text-white py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50"
+                        style={{ background: 'linear-gradient(135deg,#8f5d2f,#b8874a)' }}
                     >
                         {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
                     </button>

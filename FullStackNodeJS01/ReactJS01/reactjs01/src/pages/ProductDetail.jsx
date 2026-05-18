@@ -354,12 +354,12 @@ const ProductDetail = () => {
                     <section className="mt-14">
                         <div className="flex items-end justify-between mb-8">
                             <div>
-                                <h2 className="section-title text-stone-900">Sản phẩm tương tự</h2>
-                                <p className="text-gray-500 mt-2">
+                                <h2 className="section-title text-black">Sản phẩm tương tự</h2>
+                                <p className="text-stone-900 mt-2">
                                     Cùng danh mục{' '}
                                     <Link
                                         to={`/products?category=${product.category}`}
-                                        className="text-amber-700 hover:underline font-semibold"
+                                        className="text-stone-900 hover:underline font-semibold"
                                     >
                                         {getCategoryLabel(product.category)}
                                     </Link>
@@ -367,7 +367,7 @@ const ProductDetail = () => {
                             </div>
                             <Link
                                 to={`/products?category=${product.category}`}
-                                className="hidden sm:inline-flex items-center gap-1 text-amber-700 font-semibold hover:gap-2 transition-all"
+                                className="hidden sm:inline-flex items-center gap-1 text-stone-900 font-semibold hover:gap-2 transition-all"
                             >
                                 Xem tất cả →
                             </Link>
