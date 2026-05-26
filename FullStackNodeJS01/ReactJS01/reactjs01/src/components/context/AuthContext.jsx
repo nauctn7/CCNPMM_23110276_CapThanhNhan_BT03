@@ -55,6 +55,20 @@ export const AuthProvider = ({ children }) => {
                 setToken(response.data.token);
                 setTokenState(response.data.token);
                 setUser(response.data.user);
+                // Notify other parts of the app (e.g., Cart) that login completed
+                try {
+                    // dispatch asynchronously to avoid race where listeners
+                    // (like CartProvider) haven't been attached yet
+                    setTimeout(() => {
+                        try {
+                            window.dispatchEvent(new Event('app:login'));
+                        } catch (e) {
+                            // ignore in non-browser environments
+                        }
+                    }, 0);
+                } catch (e) {
+                    // ignore in non-browser environments
+                }
                 return { success: true, data: response.data };
             }
             return { success: false, error: response.data.EM };
@@ -77,6 +91,11 @@ export const AuthProvider = ({ children }) => {
 
     const logout = useCallback(() => {
         resetSession();
+        try {
+            window.dispatchEvent(new Event('app:logout'));
+        } catch (e) {
+            // ignore in non-browser environments
+        }
     }, [resetSession]);
 
     const value = {

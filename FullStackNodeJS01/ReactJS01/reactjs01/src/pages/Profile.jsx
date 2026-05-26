@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Descriptions, Avatar, Tag, Button, Space, Typography } from 'antd';
 import { UserOutlined, MailOutlined, CalendarOutlined, EditOutlined } from '@ant-design/icons';
 import { useAuth } from '../components/context/AuthContext';
@@ -7,6 +8,7 @@ const { Title } = Typography;
 
 const Profile = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     if (!user) return null;
 
@@ -39,9 +41,12 @@ const Profile = () => {
                     </Descriptions.Item>
                 </Descriptions>
 
-                <div style={{ textAlign: 'center', marginTop: 24 }}>
-                    <Button icon={<EditOutlined />} type="primary">
-                        Chỉnh sửa thông tin
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+                    <Button icon={<EditOutlined />} type="primary" onClick={() => navigate('/orders')}>
+                        Theo dõi đơn hàng
+                    </Button>
+                    <Button onClick={() => navigate('/orders')}>
+                        Xem lịch sử mua hàng
                     </Button>
                 </div>
             </Card>

@@ -13,6 +13,7 @@ const configViewEngine = require('./src/config/viewEngine');
 const connection = require('./src/config/database');
 const Product = require('./src/models/product');
 const User = require('./src/models/user');
+const { syncAutoConfirmOrders } = require('./src/services/orderService');
 
 // Import routes
 const apiRoutes = require('./src/routes/api');
@@ -74,6 +75,13 @@ const ensureDemoUser = async () => {
 
 const bootstrap = async () => {
     await connection();
+
+    await syncAutoConfirmOrders();
+    setInterval(() => {
+        syncAutoConfirmOrders().catch((error) => {
+            console.error('Failed to sync order statuses:', error);
+        });
+    }, 5 * 60 * 1000);
 
     const productCount = await Product.countDocuments();
     if (productCount === 0) {

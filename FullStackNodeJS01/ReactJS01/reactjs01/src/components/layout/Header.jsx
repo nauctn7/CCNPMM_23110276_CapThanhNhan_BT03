@@ -10,6 +10,7 @@ const Header = () => {
     const navigate = useNavigate();
     const [showDropdown, setShowDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const isAdmin = user?.role === 'admin';
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -113,13 +114,30 @@ const Header = () => {
                                         >
                                             Tài khoản
                                         </Link>
-                                        {user?.role === 'admin' && (
+                                        {isAdmin ? (
+                                            <Link
+                                                to="/admin/orders"
+                                                className="block px-4 py-3 text-sm hover:bg-amber-50 text-black"
+                                                onClick={() => setShowDropdown(false)}
+                                            >
+                                                Quản lý đơn hàng
+                                            </Link>
+                                        ) : (
+                                            <Link
+                                                to="/orders"
+                                                className="block px-4 py-3 text-sm hover:bg-amber-50 text-black"
+                                                onClick={() => setShowDropdown(false)}
+                                            >
+                                                Đơn hàng
+                                            </Link>
+                                        )}
+                                        {isAdmin && (
                                             <Link
                                                 to="/admin/products"
                                                 className="block px-4 py-3 text-sm hover:bg-amber-50 text-black"
                                                 onClick={() => setShowDropdown(false)}
                                             >
-                                                Quản lý kho hàng
+                                                Quản lý sản phẩm
                                             </Link>
                                         )}
                                         <hr className="my-1 border-stone-100" />

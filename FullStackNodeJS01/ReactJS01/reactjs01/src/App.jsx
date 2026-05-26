@@ -16,7 +16,10 @@ import ProductDetail from './pages/ProductDetail';
 import ProductsPage from './pages/ProductsPage';
 import PromotionsPage from './pages/PromotionsPage';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 import Profile from './pages/Profile';
+import OrdersPage from './pages/OrdersPage';
+import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminProductsPage from './pages/AdminProductsPage';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/layout/ScrollToTop';
@@ -42,6 +45,14 @@ function App() {
                         }
                     />
                     <Route
+                        path="/checkout"
+                        element={
+                            <PrivateRoute>
+                                <CheckoutPage />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
                         path="/profile"
                         element={
                             <PrivateRoute>
@@ -50,10 +61,26 @@ function App() {
                         }
                     />
                     <Route
+                        path="/orders"
+                        element={
+                            <PrivateRoute>
+                                <OrdersPage />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
                         path="/admin/products"
                         element={
                             <AdminRoute>
                                 <AdminProductsPage />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/orders"
+                        element={
+                            <AdminRoute>
+                                <AdminOrdersPage />
                             </AdminRoute>
                         }
                     />

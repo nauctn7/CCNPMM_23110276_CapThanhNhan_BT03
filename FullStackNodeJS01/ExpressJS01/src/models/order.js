@@ -39,13 +39,52 @@ const orderSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['cod', 'banking', 'momo'],
+        enum: ['cod'],
         default: 'cod'
     },
     status: {
         type: String,
-        enum: ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'],
-        default: 'pending'
+        enum: ['new', 'confirmed', 'preparing', 'shipping', 'delivered', 'cancelled'],
+        default: 'new'
+    },
+    cancelRequestStatus: {
+        type: String,
+        enum: ['none', 'requested', 'approved', 'rejected'],
+        default: 'none'
+    },
+    cancelRequestNote: String,
+    cancelRequestedAt: {
+        type: Date,
+        default: null
+    },
+    cancelReviewedAt: {
+        type: Date,
+        default: null
+    },
+    cancelReviewedNote: String,
+    statusUpdatedAt: {
+        type: Date,
+        default: Date.now
+    },
+    confirmedAt: {
+        type: Date,
+        default: null
+    },
+    preparingAt: {
+        type: Date,
+        default: null
+    },
+    shippingAt: {
+        type: Date,
+        default: null
+    },
+    deliveredAt: {
+        type: Date,
+        default: null
+    },
+    cancelledAt: {
+        type: Date,
+        default: null
     },
     note: String,
     createdAt: {

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import api from '../../services/api';
 import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
@@ -9,31 +10,82 @@ export const useCart = () => {
     return context;
 };
 
-const cartStorageKey = (userId) => `cart_${userId || 'guest'}`;
-
 export const CartProvider = ({ children }) => {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user, loading: authLoading } = useAuth();
+    const userId = user?.id || user?._id;
     const [items, setItems] = useState([]);
+    const [loadingCart, setLoadingCart] = useState(false);
 
-    useEffect(() => {
-        if (isAuthenticated && user?._id) {
-            try {
-                const saved = localStorage.getItem(cartStorageKey(user._id));
-                setItems(saved ? JSON.parse(saved) : []);
-            } catch {
+    const refreshCart = useCallback(async () => {
+        // Don't attempt to refresh while auth is still initializing
+        if (authLoading) return;
+
+        if (!isAuthenticated || !userId) {
+            setItems([]);
+            setLoadingCart(false);
+            return;
+        }
+
+        setLoadingCart(true);
+        try {
+            const response = await api.get('/api/cart');
+            if (response.data.EC === 0) {
+                setItems(response.data.cart?.items || []);
+            } else {
                 setItems([]);
             }
-        } else {
+        } catch {
             setItems([]);
-            localStorage.removeItem('cart');
+        } finally {
+            setLoadingCart(false);
         }
-    }, [isAuthenticated, user?._id]);
+    }, [authLoading, isAuthenticated, userId]);
 
     useEffect(() => {
-        if (isAuthenticated && user?._id) {
-            localStorage.setItem(cartStorageKey(user._id), JSON.stringify(items));
+        // Ensure cart is refreshed whenever auth state changes (login/logout)
+        // Wait until auth initialization completes before attempting refresh
+        if (authLoading) return;
+
+        if (isAuthenticated && userId) {
+            refreshCart();
+        } else {
+            // Clear cart for unauthenticated users
+            setItems([]);
+            setLoadingCart(false);
         }
-    }, [items, isAuthenticated, user?._id]);
+    }, [authLoading, isAuthenticated, userId, refreshCart]);
+
+    useEffect(() => {
+        const onLogin = () => {
+            void refreshCart();
+        };
+        const onLogout = () => {
+            setItems([]);
+        };
+        try {
+            window.addEventListener('app:login', onLogin);
+            window.addEventListener('app:logout', onLogout);
+        } catch (e) {
+            // ignore in non-browser environments
+        }
+        return () => {
+            try {
+                window.removeEventListener('app:login', onLogin);
+                window.removeEventListener('app:logout', onLogout);
+            } catch (e) {}
+        };
+    }, [refreshCart]);
+
+    const updateCartOnServer = useCallback(async (method, url, data) => {
+        try {
+            const response = await api[method](url, data);
+            if (response.data?.EC === 0 && response.data?.cart) {
+                setItems(response.data.cart.items || []);
+            }
+        } catch {
+            refreshCart();
+        }
+    }, [refreshCart]);
 
     const addToCart = useCallback(
         (product, quantity = 1) => {
@@ -65,13 +117,15 @@ export const CartProvider = ({ children }) => {
                     },
                 ];
             });
+            void updateCartOnServer('post', '/api/cart/items', { productId: product._id, quantity });
             return { success: true, needLogin: false };
         },
-        [isAuthenticated]
+        [isAuthenticated, updateCartOnServer]
     );
 
     const removeFromCart = (productId) => {
         setItems((prev) => prev.filter((i) => i._id !== productId));
+        void updateCartOnServer('delete', `/api/cart/items/${productId}`);
     };
 
     const updateQuantity = (productId, quantity) => {
@@ -82,11 +136,16 @@ export const CartProvider = ({ children }) => {
                 return { ...i, quantity: qty };
             })
         );
+        void updateCartOnServer('patch', `/api/cart/items/${productId}`, { quantity });
     };
 
-    const clearCart = () => setItems([]);
+    const clearCart = () => {
+        setItems([]);
+        void updateCartOnServer('delete', '/api/cart');
+    };
 
-    const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
+    const totalItems = items.length;
+    const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
     const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
     return (
@@ -97,7 +156,10 @@ export const CartProvider = ({ children }) => {
                 removeFromCart,
                 updateQuantity,
                 clearCart,
+                refreshCart,
+                loadingCart,
                 totalItems,
+                totalQuantity,
                 totalPrice,
                 canUseCart: isAuthenticated,
             }}

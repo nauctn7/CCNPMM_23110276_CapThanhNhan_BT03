@@ -155,7 +155,7 @@ const ProductDetail = () => {
                                     <span className="bg-orange-500 text-white text-xs px-2.5 py-1 rounded-full font-medium">Bán chạy</span>
                                 )}
                                 {product.discount > 0 && (
-                                    <span className="bg-red-500 text-white text-xs px-2.5 py-1 rounded-full font-medium">
+                                    <span className="inline-flex items-center justify-center min-w-[58px] h-7 px-3 rounded-full bg-red-500 text-white text-xs font-semibold leading-none">
                                         -{product.discount}%
                                     </span>
                                 )}
@@ -259,7 +259,7 @@ const ProductDetail = () => {
                                             onClick={decreaseQty}
                                             disabled={qty <= 1 || outOfStock}
                                             aria-label="Giảm"
-                                            className="w-12 h-12 text-xl font-bold hover:bg-stone-100 disabled:opacity-40 transition"
+                                            className="w-12 h-12 text-xl font-bold text-black hover:bg-stone-100 disabled:opacity-40 transition"
                                         >
                                             −
                                         </button>
@@ -273,14 +273,14 @@ const ProductDetail = () => {
                                                 setQty(Math.max(1, Math.min(maxQty || 1, v)));
                                             }}
                                             disabled={outOfStock}
-                                            className="w-14 text-center font-bold text-lg border-x-2 border-stone-200 py-2 outline-none"
+                                            className="w-14 text-center font-bold text-lg text-black border-x-2 border-stone-200 py-2 outline-none"
                                         />
                                         <button
                                             type="button"
                                             onClick={increaseQty}
                                             disabled={qty >= maxQty || outOfStock}
                                             aria-label="Tăng"
-                                            className="w-12 h-12 text-xl font-bold hover:bg-stone-100 disabled:opacity-40 transition"
+                                            className="w-12 h-12 text-xl font-bold text-black hover:bg-stone-100 disabled:opacity-40 transition"
                                         >
                                             +
                                         </button>
@@ -308,7 +308,7 @@ const ProductDetail = () => {
                                     type="button"
                                     onClick={handleAddToCart}
                                     disabled={outOfStock}
-                                    className="btn-primary flex-1 py-4 text-base disabled:opacity-50"
+                                    className="btn-primary flex-1 py-4 text-base text-black disabled:opacity-50"
                                 >
                                     {outOfStock ? 'Hết hàng' : isAuthenticated ? 'Thêm vào giỏ hàng' : 'Đăng nhập để mua'}
                                 </button>
@@ -316,7 +316,8 @@ const ProductDetail = () => {
                                     type="button"
                                     onClick={handleBuyNow}
                                     disabled={outOfStock}
-                                    className="btn-outline flex-1 sm:flex-none py-4 disabled:opacity-50"
+                                    className="flex-1 sm:flex-none py-4 px-6 rounded-xl font-semibold text-white transition disabled:opacity-50"
+                                    style={{ background: 'linear-gradient(135deg, #2f1a10, #120805)', boxShadow: '0 14px 30px rgba(18, 8, 5, 0.35)' }}
                                 >
                                     Mua ngay
                                 </button>

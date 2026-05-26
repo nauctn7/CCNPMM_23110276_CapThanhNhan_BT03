@@ -29,6 +29,22 @@ const {
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/admin');
 const delay = require('../middleware/delay');
+const {
+    getCart,
+    addCartItem,
+    updateCartItem,
+    deleteCartItem,
+    clearCart,
+    checkoutCod,
+} = require('../controllers/cartController');
+const {
+    getAllOrders,
+    getMyOrders,
+    getMyOrderById,
+    cancelMyOrder,
+    reviewCancelRequest,
+    updateOrderStatus,
+} = require('../controllers/orderController');
 
 const routerAPI = express.Router();
 
@@ -67,5 +83,21 @@ routerAPI.get("/", auth, (req, res) => {
 
 routerAPI.get("/user", auth, getUser);
 routerAPI.get("/account", auth, delay, getAccount);
+
+// Cart and checkout routes (private)
+routerAPI.get('/cart', auth, getCart);
+routerAPI.post('/cart/items', auth, addCartItem);
+routerAPI.patch('/cart/items/:productId', auth, updateCartItem);
+routerAPI.delete('/cart/items/:productId', auth, deleteCartItem);
+routerAPI.delete('/cart', auth, clearCart);
+routerAPI.post('/orders/checkout', auth, checkoutCod);
+
+routerAPI.get('/orders', auth, getMyOrders);
+routerAPI.get('/orders/:id', auth, getMyOrderById);
+routerAPI.patch('/orders/:id/cancel', auth, cancelMyOrder);
+
+routerAPI.get('/admin/orders', auth, adminOnly, getAllOrders);
+routerAPI.patch('/admin/orders/:id/cancel-review', auth, adminOnly, reviewCancelRequest);
+routerAPI.patch('/admin/orders/:id/status', auth, adminOnly, updateOrderStatus);
 
 module.exports = routerAPI;
